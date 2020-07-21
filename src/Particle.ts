@@ -17,6 +17,7 @@ export default class Particle {
     this.getOptions = getOptions
     const {
       colors,
+      images,
       initialVelocityX,
       initialVelocityY,
     } = this.getOptions()
@@ -32,6 +33,7 @@ export default class Particle {
     this.angle = degreesToRads(randomRange(0, 360))
     this.angularSpin = randomRange(-0.2, 0.2)
     this.color = colors[Math.floor(Math.random() * colors.length)]
+    this.image = images[Math.floor(Math.random() * images.length)]
     this.rotateY = randomRange(0, 1)
     this.rotationDirection = randomRange(0, 1) ? RotationDirection.Positive : RotationDirection.Negative
   }
@@ -60,6 +62,8 @@ export default class Particle {
 
   color: string
 
+  image?: HTMLImageElement;
+
   // Actually used as scaleY to simulate rotation cheaply
   rotateY: number
 
@@ -67,13 +71,45 @@ export default class Particle {
 
   getOptions: () => IConfettiOptions
 
+  renderParticle() {
+    const {
+      opacity,
+      drawShape,
+    } = this.getOptions()
+
+    this.context.fillStyle = this.color
+    this.context.strokeStyle = this.color
+    this.context.globalAlpha = opacity
+    this.context.lineCap = 'round'
+    this.context.lineWidth = 2
+
+    if(drawShape && typeof drawShape === 'function') {
+      drawShape.call(this, this.context)
+    } else {
+      switch(this.shape) {
+        case ParticleShape.Circle: {
+          this.context.beginPath()
+          this.context.arc(0, 0, this.radius, 0, 2 * Math.PI)
+          this.context.fill()
+          break
+        }
+        case ParticleShape.Square: {
+          this.context.fillRect(-this.w / 2, -this.h / 2, this.w, this.h)
+          break
+        }
+        case ParticleShape.Strip: {
+          this.context.fillRect(-this.w / 6, -this.h / 2, this.w / 3, this.h)
+          break
+        }
+      }
+    }
+  }
+
   update() {
     const {
       gravity,
       wind,
       friction,
-      opacity,
-      drawShape,
     } = this.getOptions()
     this.x += this.vx
     this.y += this.vy
@@ -97,31 +133,19 @@ export default class Particle {
     this.context.scale(1, this.rotateY)
     this.context.rotate(this.angle)
     this.context.beginPath()
-    this.context.fillStyle = this.color
-    this.context.strokeStyle = this.color
-    this.context.globalAlpha = opacity
-    this.context.lineCap = 'round'
-    this.context.lineWidth = 2
-    if(drawShape && typeof drawShape === 'function') {
-      drawShape.call(this, this.context)
+
+    if(this.image && this.image instanceof Image) {
+      this.context.drawImage(
+        this.image,
+        -this.image.width / 2,
+        -this.image.height / 2,
+        this.image.width,
+        this.image.height
+      )
     } else {
-      switch(this.shape) {
-        case ParticleShape.Circle: {
-          this.context.beginPath()
-          this.context.arc(0, 0, this.radius, 0, 2 * Math.PI)
-          this.context.fill()
-          break
-        }
-        case ParticleShape.Square: {
-          this.context.fillRect(-this.w / 2, -this.h / 2, this.w, this.h)
-          break
-        }
-        case ParticleShape.Strip: {
-          this.context.fillRect(-this.w / 6, -this.h / 2, this.w / 3, this.h)
-          break
-        }
-      }
+      this.renderParticle()
     }
+
     this.context.closePath()
     this.context.restore()
   }

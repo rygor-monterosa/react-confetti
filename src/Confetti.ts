@@ -48,6 +48,10 @@ export interface IConfettiOptions {
    */
   colors: string[]
   /**
+   * Array of images to choose from.
+   */
+  images: HTMLImageElement[]
+  /**
    * Opacity of the confetti.
    * @default 1
    */
@@ -112,6 +116,7 @@ export const confettiDefaults: Pick<IConfettiOptions, Exclude<keyof IConfettiOpt
     '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800',
     '#FF5722', '#795548',
   ],
+  images: [],
   opacity: 1.0,
   debug: false,
   tweenFunction: tweens.easeInOutQuad,
